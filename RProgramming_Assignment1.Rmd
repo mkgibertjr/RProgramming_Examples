@@ -18,8 +18,6 @@ The zip file contains 332 comma-separated-value (CSV) files containing pollution
 * sulfate: the level of sulfate PM in the air on that date (measured in micrograms per cubic meter)
 * nitrate: the level of nitrate PM in the air on that date (measured in micrograms per cubic meter)
 
-
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 if (!require("tidyverse")) install.packages("tidyverse")
@@ -41,7 +39,6 @@ if(!dir.exists("specdata")){
 
 Write a function named 'pollutantmean' that calculates the mean of a pollutant (sulfate or nitrate) across a specified list of monitors. The function 'pollutantmean' takes three arguments: 'directory', 'pollutant', and 'id'. Given a vector monitor ID numbers, 'pollutantmean' reads that monitors' particulate matter data from the directory specified in the 'directory' argument and returns the mean of the pollutant across all of the monitors, ignoring any missing values coded as NA. A prototype of the function is as follows
 
-
 ```{r pollutantmean}
 pollutantmean <- function(directory, pollutant, id){
   #id <- 332
@@ -54,7 +51,7 @@ pollutantmean <- function(directory, pollutant, id){
   }
   
   mean_pollutant <- mean(data[,pollutant],na.rm = TRUE)
-  write.csv(mean_pollutant,file = "mean_pollutant.csv")
+  write.csv(mean_pollutant,file = paste(pollutant,"mean_pollutant.csv",sep="_"))
 }
 
 pollutantmean("./specdata","sulfate",332)
@@ -62,4 +59,54 @@ pollutantmean("./specdata","sulfate",332)
 pollutantmean("./specdata","nitrate",332)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Part 2
+
+Write a function that reads a directory full of files and reports the number of completely observed cases in each data file. The function should return a data frame where the first column is the name of the file and the second column is the number of complete cases. A prototype of this function follows
+
+```{r completed_cases}
+completed_cases <- function(directory,id){
+  #i = 1
+  #id <- 332
+  #directory <- "./specdata"
+  filenames <- list.files(directory)
+  data <- data.frame()
+  for(i in 1:id){
+    print(paste("working on sample",i,sep=" "))
+    df <- read.csv(paste(directory,filenames[i],sep = "/"))
+    rbinder <- data.frame(filenames[i],sum(is.na(df)))
+    data <- rbind(data,rbinder)
+  }
+colnames(data) <- c("file","completedcases")
+write.csv(data,"completedcases.csv")
+}
+
+completed_cases("./specdata",332)
+```
+
+## Part 3
+
+Write a function that takes a directory of data files and a threshold for complete cases and calculates the correlation between sulfate and nitrate for monitor locations where the number of completely observed cases (on all variables) is greater than the threshold. The function should return a vector of correlations for the monitors that meet the threshold requirement. If no monitors meet the threshold requirement, then the function should return a numeric vector of length 0. A prototype of this function follows
+
+```{r corr}
+corr <- function(directory,threshold = 0,id){
+  #i = 1
+  #id <- 332
+  #directory <- "./specdata"
+  #threshold <- 0
+  filenames <- list.files(directory)
+  data <- data.frame()
+  for(i in 1:id){
+    print(paste("working on sample",i,sep=" "))
+    df <- read.csv(paste(directory,filenames[i],sep = "/"))
+    if(sum(is.na(df))>=threshold){
+    rbinder <- data.frame(filenames[i],cor(df$nitrate,df$sulfate,use = "pairwise.complete.obs"))
+    }else{rbinder <- data.frame(filenames[i],0)
+    }
+    data <- rbind(data,rbinder)
+  }
+colnames(data) <- c("file","corr")
+write.csv(data,"corr.csv")
+}
+
+corr("./specdata",threshold = 0,332)
+```
