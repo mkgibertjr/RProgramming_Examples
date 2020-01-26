@@ -3,11 +3,37 @@ title: 'R Programming - Assignment #1'
 author: "Myron Keith Gibert Jr"
 date: "January 21, 2020"
 output: pdf_document
+toc: true
+header-includes:
+- \usepackage{fancyhdr}
+- \usepackage{lipsum}
+- \pagestyle{fancy}
+- \fancyfoot[LO,CE]{Address all questions to Myron Keith Gibert Jr at mkgibertjr@msn.com}
+- \fancyfoot[LE,RO]{\thepage}
 ---
-##Introduction
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r tinytex, include=FALSE}
+## INSTALLING LATEX FOR RMARKDOWN
+
+#RMarkdown requires LaTex to create pdf documents as an output. More information can be found [here](https://bookdown.org/yihui/rmarkdown/pdf-document.html). Alternatively, output can be set to "html_document" or "word_document". End users may install LaTex by setting the "wanttinytex" variable to FALSE and running the following script:
+
+#Install tinytex to let RMarkdown create a pdf document? Default: wanttinytex <- FALSE
+wanttinytex <- FALSE
+
+if(tinytex:::is_tinytex()==FALSE && wanttinytex == TRUE){
+if (!require("tinytex")) install.packages("tinytex")
+tinytex::install_tinytex()
+}
+```
+
+## Introduction
 For this first programming assignment I wrote three functions that are meant to interact with dataset that accompanies this assignment. The dataset is contained in a zip file specdata.zip that is included in the GitHub repository.
 
-# Data
+## Data
 The zip file containing the data can be downloaded here:
 
 [specdata.zip 2.4MB](https://d396qusza40orc.cloudfront.net/rprog%2Fdata%2Fspecdata.zip)
@@ -17,12 +43,6 @@ The zip file contains 332 comma-separated-value (CSV) files containing pollution
 * Date: the date of the observation in YYYY-MM-DD format (year-month-day)
 * sulfate: the level of sulfate PM in the air on that date (measured in micrograms per cubic meter)
 * nitrate: the level of nitrate PM in the air on that date (measured in micrograms per cubic meter)
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-if (!require("tidyverse")) install.packages("tidyverse")
-library("tidyverse")
-```
 
 ## Unzipping the data
 
@@ -37,76 +57,188 @@ if(!dir.exists("specdata")){
 
 ## Part 1
 
-Write a function named 'pollutantmean' that calculates the mean of a pollutant (sulfate or nitrate) across a specified list of monitors. The function 'pollutantmean' takes three arguments: 'directory', 'pollutant', and 'id'. Given a vector monitor ID numbers, 'pollutantmean' reads that monitors' particulate matter data from the directory specified in the 'directory' argument and returns the mean of the pollutant across all of the monitors, ignoring any missing values coded as NA. A prototype of the function is as follows
+I first wrote a function named 'pollutantmean' that calculates the mean of a pollutant (sulfate or nitrate) across a specified list of monitors. The function 'pollutantmean' takes three arguments: 'directory', 'pollutant', and 'id'. Given a vector monitor ID numbers, 'pollutantmean' reads that monitors' particulate matter data from the directory specified in the 'directory' argument and returns the mean of the pollutant across all of the monitors, ignoring any missing values coded as NA. My final version of this function is as follows:
 
 ```{r pollutantmean}
-pollutantmean <- function(directory, pollutant, id){
+pollutantmean <- function(directory, pollutant, id = 1:332){
   #id <- 332
   #directory <- "./specdata"
   #pollutant <- "sulfate"
   filenames <- list.files(directory)
   data <- data.frame()
-  for(i in 1:id){
+  for(i in id){
     data <- rbind(data,read.csv(paste(directory,filenames[i],sep = "/")))
   }
   
   mean_pollutant <- mean(data[,pollutant],na.rm = TRUE)
   write.csv(mean_pollutant,file = paste(pollutant,"mean_pollutant.csv",sep="_"))
+  mean_pollutant
 }
 
-pollutantmean("./specdata","sulfate",332)
+# ExamplesS
+pollutantmean("./specdata","sulfate",1:10)
 
-pollutantmean("./specdata","nitrate",332)
+pollutantmean("./specdata","nitrate",70:72)
+
+pollutantmean("./specdata","nitrate",23)
 ```
-
+\newpage
 ## Part 2
 
-Write a function that reads a directory full of files and reports the number of completely observed cases in each data file. The function should return a data frame where the first column is the name of the file and the second column is the number of complete cases. A prototype of this function follows
+I then wrote a function that reads a directory full of files and reports the number of completely observed cases in each data file. The function should return a data frame where the first column is the name of the file and the second column is the number of complete cases. The final version of this function is as follows:
 
 ```{r completed_cases}
-completed_cases <- function(directory,id){
+complete <- function(directory,id = 1:332){
   #i = 1
-  #id <- 332
+  #id <- 1
   #directory <- "./specdata"
   filenames <- list.files(directory)
   data <- data.frame()
-  for(i in 1:id){
-    print(paste("working on sample",i,sep=" "))
+  for(i in id){
     df <- read.csv(paste(directory,filenames[i],sep = "/"))
-    rbinder <- data.frame(filenames[i],sum(is.na(df)))
+    rbinder <- data.frame(filenames[i],sum(complete.cases(df)))
     data <- rbind(data,rbinder)
   }
-colnames(data) <- c("file","completedcases")
+colnames(data) <- c("id","nobs")
 write.csv(data,"completedcases.csv")
+data
 }
 
-completed_cases("./specdata",332)
-```
+# Examples
+complete("./specdata",1)
 
+complete("./specdata",c(2,4,6,8,10,12))
+
+complete("./specdata",30:25)
+
+complete("./specdata",3)
+```
+\newpage
 ## Part 3
 
-Write a function that takes a directory of data files and a threshold for complete cases and calculates the correlation between sulfate and nitrate for monitor locations where the number of completely observed cases (on all variables) is greater than the threshold. The function should return a vector of correlations for the monitors that meet the threshold requirement. If no monitors meet the threshold requirement, then the function should return a numeric vector of length 0. A prototype of this function follows
+Lastly, I wrote a function that takes a directory of data files and a threshold for complete cases and calculates the correlation between sulfate and nitrate for monitor locations where the number of completely observed cases (on all variables) is greater than the threshold. The function should return a vector of correlations for the monitors that meet the threshold requirement. If no monitors meet the threshold requirement, then the function should return a numeric vector of length 0. The final version of this function is as follows:
 
 ```{r corr}
-corr <- function(directory,threshold = 0,id){
-  #i = 1
-  #id <- 332
-  #directory <- "./specdata"
-  #threshold <- 0
-  filenames <- list.files(directory)
-  data <- data.frame()
-  for(i in 1:id){
-    print(paste("working on sample",i,sep=" "))
-    df <- read.csv(paste(directory,filenames[i],sep = "/"))
-    if(sum(is.na(df))>=threshold){
-    rbinder <- data.frame(filenames[i],cor(df$nitrate,df$sulfate,use = "pairwise.complete.obs"))
-    }else{rbinder <- data.frame(filenames[i],0)
+
+corr <- function(directory,threshold = 0){
+#directory <- "./specdata"
+#threshold <- 150
+#i=1
+cor_results <- as.numeric(vector())
+complete_cases <- complete(directory)
+complete_cases <- complete_cases[complete_cases$nobs>=threshold, ]
+
+if(nrow(complete_cases)>0){
+    for(caseid in complete_cases$id){
+          path <- paste(directory,caseid, sep = "/")
+          data <- read.csv(path)
+          narm.data <- data[(!is.na(data$sulfate)), ]
+          narm.data <- narm.data[(!is.na(narm.data$nitrate)), ]
+          cor_results <- c(cor_results, cor(narm.data$nitrate, narm.data$sulfate))
+        }
     }
-    data <- rbind(data,rbinder)
-  }
-colnames(data) <- c("file","corr")
-write.csv(data,"corr.csv")
+    cor_results
 }
 
-corr("./specdata",threshold = 0,332)
+# Examples
+cr <- corr("./specdata",150)
+head(cr)
+summary(cr)
+
+cr <- corr("./specdata",400)
+head(cr)
+summary(cr)
+
+cr <- corr("specdata", 5000)
+summary(cr)
+length(cr)
+
+cr <- corr("specdata")
+summary(cr)
+length(cr)
+```
+
+## Quiz
+
+After completing the programming assignment, I had to complete a quiz using the provided code with each question.  I first had to run the provided code, and then select my output from the multiple choice options.  This quiz was used to verify whether my three functions can effectively answer the data science questions from this data set.  My final score was a 100%.
+
+1. What value is returned by the following call to pollutantmean()? You should round your output to 3 digits.
+
+```{r q1}
+pollutantmean("specdata", "sulfate", 1:10)
+```
+
+2. What value is returned by the following call to pollutantmean()? You should round your output to 3 digits.
+
+```{r q2}
+pollutantmean("specdata", "nitrate", 70:72)
+```
+
+3. What value is returned by the following call to pollutantmean()? You should round your output to 3 digits.
+
+```{r q3}
+pollutantmean("specdata", "sulfate", 34)
+```
+
+4. What value is returned by the following call to pollutantmean()? You should round your output to 3 digits.
+
+```{r q4}
+pollutantmean("specdata", "nitrate")
+```
+
+5. What value is printed at end of the following code?
+
+```{r q5}
+cc <- complete("specdata", c(6, 10, 20, 34, 100, 200, 310))
+print(cc$nobs)
+```
+
+6. What value is printed at end of the following code?
+
+```{r q6}
+cc <- complete("specdata", 54)
+print(cc$nobs)
+```
+
+7. What value is printed at end of the following code?
+
+```{r q7}
+RNGversion("3.5.1")  
+set.seed(42)
+cc <- complete("specdata", 332:1)
+use <- sample(332, 10)
+print(cc[use, "nobs"])
+```
+
+8. What value is printed at end of the following code?
+
+```{r q8}
+cr <- corr("specdata")                
+cr <- sort(cr)   
+RNGversion("3.5.1")
+set.seed(868)                
+out <- round(cr[sample(length(cr), 5)], 4)
+print(out)
+```
+
+9. What value is printed at end of the following code?
+
+```{r q9}
+cr <- corr("specdata", 129)                
+cr <- sort(cr)                
+n <- length(cr)    
+RNGversion("3.5.1")
+set.seed(197)                
+out <- c(n, round(cr[sample(n, 5)], 4))
+print(out)
+```
+
+10. What value is printed at end of the following code?
+
+```{r q10}
+cr <- corr("specdata", 2000)                
+n <- length(cr)                
+cr <- corr("specdata", 1000)                
+cr <- sort(cr)
+print(c(n, round(cr, 4)))
 ```
