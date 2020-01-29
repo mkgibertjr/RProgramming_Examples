@@ -4,12 +4,7 @@ author: "Myron Keith Gibert Jr"
 date: "January 21, 2020"
 output: pdf_document
 toc: true
-header-includes:
-- \usepackage{fancyhdr}
-- \usepackage{lipsum}
-- \pagestyle{fancy}
-- \fancyfoot[LO,CE]{Address all questions to Myron Keith Gibert Jr at mkgibertjr@msn.com}
-- \fancyfoot[LE,RO]{\thepage}
+linkcolor: blue
 ---
 
 ```{r setup, include=FALSE}
@@ -29,6 +24,9 @@ if (!require("tinytex")) install.packages("tinytex")
 tinytex::install_tinytex()
 }
 ```
+
+## Correspondence 
+Please address any questions to Myron Keith Gibert Jr at [mkgibertjr@msn.com](mailto:mkgibertjr@msn.com).  Code for this project is stored in a [GitHub repository](https://github.com/mkgibertjr/CouseraRProgramming_Assignments).
 
 ## Introduction
 For this first programming assignment I wrote three functions that are meant to interact with dataset that accompanies this assignment. The dataset is contained in a zip file specdata.zip that is included in the GitHub repository.
