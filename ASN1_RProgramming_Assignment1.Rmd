@@ -31,10 +31,55 @@ Please address any questions to Myron Keith Gibert Jr at [mkgibertjr@msn.com](ma
 ## Introduction
 For this first programming assignment I wrote three functions that are meant to interact with dataset that accompanies this assignment. The dataset is contained in a zip file specdata.zip that is included in the GitHub repository.
 
+## Set Parameters
+```{r parameters}
+#set output directory? Default: outputdir <- "assignment1outputs"
+outputdir <- "assignment1outputs"
+#Overwrite contents of the output directory? Default: deleteoutputs <- FALSE
+deleteoutputs <- TRUE
+#Delete specdata/ directory after completing the analysis? Default: deletespec <- TRUE
+deletespec <- TRUE
+```
+
+## Debug
+
+The debug chunk will prevent the script from running if any of the dependent variables for this analysis do not exist.  This should prevent the program from erroring out after a long runtime without producing any results due to a missing variable.  If modifying the input .csv and .xlsx files, it is important to leave all header information and column names intact, as the program uses this information to extract relevant data.  Columns are intuitively labeled to end user convenience.
+
+```{r debug}
+if (dir.exists(outputdir) && deleteoutputs == FALSE ){
+  stop("Your output directory already exists!  Please delete/move 
+       this folder from your working directory.  Alternatively, you 
+       can set 'deleteoutputs' to TRUE to auto-delete this folder 
+       for every run. You may also choose an alternative output 
+       directory.")
+}else{
+  unlink(outputdir,recursive = TRUE)
+}
+
+if (!exists("outputdir")){
+stop("outputdir variable is not defined.  Please ensure that all 
+     parameters in the r parameters chunk are defined.")
+}
+
+if (!exists("deleteoutputs")){
+stop("deleteoutputs variable is not defined.  Please ensure that all 
+     parameters in the r parameters chunk are defined.")
+}
+
+if (!exists("deletespec")){
+stop("deletespec variable is not defined.  Please ensure that all 
+     parameters in the r parameters chunk are defined.")
+}
+
+if (!dir.exists(outputdir)){dir.create(outputdir)}
+```
+
 ## Data
 The zip file containing the data can be downloaded here:
 
 [specdata.zip 2.4MB](https://d396qusza40orc.cloudfront.net/rprog%2Fdata%2Fspecdata.zip)
+
+I have renamed the file to "ASN1_rprog_data_specdata.zip" for organization.
 
 The zip file contains 332 comma-separated-value (CSV) files containing pollution monitoring data for fine particulate matter (PM) air pollution at 332 locations in the United States. Each file contains data from a single monitor and the ID number for each monitor is contained in the file name. For example, data for monitor 200 is contained in the file "200.csv". Each file contains three variables:
 
@@ -48,9 +93,9 @@ For this programming assignment I needed to unzip this file and create the direc
 
 ```{r unzip}
 if(!dir.exists("specdata")){
-  unzip("rprog_data_specdata.zip")
+  unzip("ASN1_rprog_data_specdata.zip")
 }
-#setwd("./specdata")
+
 ```
 
 ## Part 1
@@ -69,7 +114,7 @@ pollutantmean <- function(directory, pollutant, id = 1:332){
   }
   
   mean_pollutant <- mean(data[,pollutant],na.rm = TRUE)
-  write.csv(mean_pollutant,file = paste(pollutant,"mean_pollutant.csv",sep="_"))
+  write.csv(mean_pollutant,file = paste(outputdir,"/",pollutant,"_mean_pollutant.csv",sep=""))
   mean_pollutant
 }
 
@@ -98,7 +143,7 @@ complete <- function(directory,id = 1:332){
     data <- rbind(data,rbinder)
   }
 colnames(data) <- c("id","nobs")
-write.csv(data,"completedcases.csv")
+write.csv(data,paste(outputdir,"completedcases.csv",sep="/"))
 data
 }
 
@@ -240,3 +285,11 @@ cr <- corr("specdata", 1000)
 cr <- sort(cr)
 print(c(n, round(cr, 4)))
 ```
+
+## Cleanup
+This final command removes the unzipped "specdata" directory if the deletespec variable is set to TRUE.  This reduces the overall storage burden of this project by removing the files that we no longer need access to. The zipped file remains in the working directory, so "specdata" will be recreated anyways using the command in line 93 (unzip) if it is deleted here.
+
+```{r cleanup}
+if(deletespec == TRUE){unlink("specdata",recursive = TRUE)}
+```
+
