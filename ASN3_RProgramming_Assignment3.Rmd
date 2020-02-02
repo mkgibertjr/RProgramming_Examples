@@ -108,7 +108,7 @@ if(
 I first needed to read the outcome data into R via the read.csv function and look at the first few rows.
 
 ```{r read30day, results='hide'}
-outcome <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
+outcomedata <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
 
 head(outcome)
 ```
@@ -118,7 +118,7 @@ I then need to make a simple histogram of the 30-day death reates from heart att
 ```{r plot30day}
 
 # I will get a warning about NAs being introduced; that is okay
-outcome[,11] <- as.numeric(outcome[,11])
+outcomedata[,11] <- as.numeric(outcomedata[,11])
 
 ```
 
@@ -126,6 +126,60 @@ Because I originally read the data in as character (by specifying colClasses = "
 
 ## Finding the best hospital in a state
 
+```{r findbesthos}
+
+best <- function(state,outcome){
+  
+  #state <- "TX"
+  #outcome <- "heart attack"
+  
+  data <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
+  
+  if (is.na(match(state,data$State))){
+  stop("invalid state")
+  }
+  
+  if (outcome == "heart attack" | 
+      outcome == "Heart Attack" | 
+      outcome == "heart failure" | 
+      outcome == "Heart Failure" |
+      outcome == "pneumonia" |
+      outcome == "Pneumonia"){}else{
+        stop("invalid outcome")
+      }
+  
+  beststate <- data[which(data$State==state),]
+  
+  if(outcome=="heart attack" | outcome=="Heart Attack"){
+    minrate <- min(as.numeric(beststate$Hospital.30.Day.Death..Mortality..Rates.from.Heart.Attack),na.rm=TRUE)
+    besthos <- beststate$Hospital.Name[match(minrate,as.numeric(beststate$Hospital.30.Day.Death..Mortality..Rates.from.Heart.Attack))]
+  }else{
+  if(outcome=="heart failure" | outcome=="Heart Failure"){
+    minrate <- min(as.numeric(beststate$Hospital.30.Day.Death..Mortality..Rates.from.Heart.Failure),na.rm=TRUE)
+    besthos <- beststate$Hospital.Name[match(minrate,as.numeric(beststate$Hospital.30.Day.Death..Mortality..Rates.from.Heart.Failure))]
+  }else{
+  if(outcome=="pneumonia" | outcome=="Pneumonia"){
+    minrate <- min(as.numeric(beststate$Hospital.30.Day.Death..Mortality..Rates.from.Pneumonia),na.rm=TRUE)
+    besthos <- beststate$Hospital.Name[match(minrate,as.numeric(beststate$Hospital.30.Day.Death..Mortality..Rates.from.Pneumonia))]
+  }}}
+  
+  besthos
+  
+}
+
+best("TX","Heart Attack")
+
+best("TX","heart failure")
+
+best("MD","heart attack")
+
+best("MD","pneumonia")
+
+#best("BB", "heart attack")
+
+#best("NY","hert attack")
+
+```
 
 
 ## Cleanup
