@@ -1,15 +1,25 @@
 ---
-title: 'R Programming - Assignment #1'
+title: 'R Programming - Assignment #3'
 author: "Myron Keith Gibert Jr"
 date: "January 21, 2020"
 output: pdf_document
-toc: true
-linkcolor: blue
+header-includes:
+- \usepackage{hyperref}
+- \hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    pdftitle={R Programming - Assignment 3},
+    pdfpagemode=FullScreen,
+    }
+toc: TRUE
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+\thispagestyle{empty}
+\clearpage
+\pagenumbering{arabic} 
+\pagebreak
 
 ```{r tinytex, include=FALSE}
 ## INSTALLING LATEX FOR RMARKDOWN
@@ -19,16 +29,37 @@ knitr::opts_chunk$set(echo = TRUE)
 #Install tinytex to let RMarkdown create a pdf document? Default: wanttinytex <- FALSE
 wanttinytex <- FALSE
 
+if(wanttinytex == TRUE){
+
 if(tinytex:::is_tinytex()==FALSE && wanttinytex == TRUE){
-if (!require("tinytex")) install.packages("tinytex")
-tinytex::install_tinytex()
+  if (!require("tinytex")) install.packages("tinytex")
+  tinytex::install_tinytex()
+  tinytex:::install_prebuilt()}
+
+library("tinytex")
+#tlmgr_install("fvextra")
+
 }
+
 ```
 
-## Correspondence 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,warning=FALSE,message=FALSE)
+
+if (!require("tidyverse")) install.packages("tidyverse")
+library("tidyverse")
+
+if (!require("ggplot2")) install.packages("ggplot2")
+library("ggplot2")
+
+if (!require("ggthemes")) install.packages("ggthemes")
+library("ggthemes")
+```
+
+# Correspondence 
 Please address any questions to Myron Keith Gibert Jr at [mkgibertjr@msn.com](mailto:mkgibertjr@msn.com).  Code for this project is stored in a [GitHub repository](https://github.com/mkgibertjr/CouseraRProgramming_Assignments).
 
-## Introduction
+# Introduction
 For this assignment, I created two functions.  The first function will create a special list vector that can store an inverted matrix based on an input matrix.  The second function will create an inverted matrix using the special vector and store that matrix within that vector's environment.  In addition to acquiring more practice in writing functions, this assignment involved an understanding of lexical scoping. Because of this, I will take extra steps to explain what each function does, and then perform some tests at the end to confirm that the functions work as intended.
 
 The full instructions for this assignment can be found [here](https://github.com/rdpeng/ProgrammingAssignment2).
@@ -76,41 +107,29 @@ stop("deletehos variable is not defined.  Please ensure that all
 if (!dir.exists(outputdir)){dir.create(outputdir)}
 ```
 
-## Data
-The zip file containing the data can be downloaded here:
-
-[specdata.zip 2.4MB](https://d396qusza40orc.cloudfront.net/rprog%2Fdata%2Fspecdata.zip)
-
-I have renamed the file to "ASN1_rprog_data_specdata.zip" for organization.
-
-The zip file contains 332 comma-separated-value (CSV) files containing pollution monitoring data for fine particulate matter (PM) air pollution at 332 locations in the United States. Each file contains data from a single monitor and the ID number for each monitor is contained in the file name. For example, data for monitor 200 is contained in the file "200.csv". Each file contains three variables:
-
-* Date: the date of the observation in YYYY-MM-DD format (year-month-day)
-* sulfate: the level of sulfate PM in the air on that date (measured in micrograms per cubic meter)
-* nitrate: the level of nitrate PM in the air on that date (measured in micrograms per cubic meter)
+# Data
 
 ## Unzipping the data
 
-For this programming assignment I needed to unzip this file and create the directory 'specdata'. Once I unzipped the zip file, I did not make any modifications to the files in the 'specdata' directory. In each file you'll notice that there are many days where either sulfate or nitrate (or both) are missing (coded as NA). This is common with air pollution monitoring data in the United States.
+For this programming assignment I needed to unzip this folder. Once I unzipped the zip file, I did not make any modifications to the files in the directories. 
 
 ```{r unzip}
 if(
   !dir.exists("hospital-data.csv")|
    !dir.exists("outcome-of-care-measures.csv")|
    !dir.exists("Hospital_Revised_Flatfiles.pdf")
-)
-  {unzip("ASN3_rprog_data_hospital.zip")}
+){unzip("ASN3_rprog_data_hospital.zip")}
 
 ```
 
-## Plot the 30-day mortality rates for heart attack
+# Plot the 30-day mortality rates for heart attack
 
 I first needed to read the outcome data into R via the read.csv function and look at the first few rows.
 
-```{r read30day, results='hide'}
+```{r read30day,results=FALSE,message=FALSE}
 outcomedata <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
 
-head(outcome)
+head(outcomedata)
 ```
 
 I then need to make a simple histogram of the 30-day death reates from heart attack.  This is column 11 in the outcome dataset.
@@ -120,13 +139,109 @@ I then need to make a simple histogram of the 30-day death reates from heart att
 # I will get a warning about NAs being introduced; that is okay
 outcomedata[,11] <- as.numeric(outcomedata[,11])
 
+heartattack <- outcomedata[,11]
+
+heartattack <- as.data.frame(heartattack[complete.cases(heartattack)])
+
+colnames(heartattack) <- "thirty_day_HA_mortality"
+
+p <- ggplot(heartattack,aes(thirty_day_HA_mortality)) + 
+  geom_histogram() + 
+  xlab("Days") + 
+  ylab(expression("Deaths")) + 
+  ggtitle(expression("30-Day mortality rates of Heart Attack Patients")) +
+  theme_light() +
+  scale_color_colorblind() +
+  scale_fill_colorblind() +
+  theme(axis.text.x=element_text(size=rel(1.2),angle = 90, vjust = 0.5, hjust = 1),
+        plot.title = element_text(size=rel(1.2), face="bold",hjust = 0.5),
+        legend.position = "none") 
+
+p
+
 ```
 
 Because I originally read the data in as character (by specifying colClasses = "character"), I need to coerce the column to be numeric. I got a warning about NAs being introduced but that is okay, as there is missing data.
 
-## Finding the best hospital in a state
+# Finding the best hospital in a state
 
 ```{r findbesthos}
+
+best <- function(state,outcome){
+  
+  #state <- "TX"
+  #outcome <- "heart attack"
+  
+  data <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
+  
+  if (is.na(match(state,data$State))){
+  stop("invalid state")
+  }
+  
+  if (outcome == "heart attack" | 
+      outcome == "Heart Attack" | 
+      outcome == "heart failure" | 
+      outcome == "Heart Failure" |
+      outcome == "pneumonia" |
+      outcome == "Pneumonia"){}else{
+        stop("invalid outcome")
+      }
+  
+  beststate <- data[which(data$State==state),]
+  
+  if(outcome=="heart attack" | outcome=="Heart Attack"){
+    minrate <- min(
+                as.numeric(
+                beststate$Hospital.30.Day.Death..Mortality..Rates.from.Heart.Attack)
+                ,na.rm=TRUE)
+    besthos <- beststate$Hospital.Name[
+      match(
+        minrate
+        ,as.numeric(
+        beststate$Hospital.30.Day.Death..Mortality..Rates.from.Heart.Attack))]
+  }else{
+  if(outcome=="heart failure" | outcome=="Heart Failure"){
+    minrate <- min(
+                  as.numeric(
+                  beststate$Hospital.30.Day.Death..Mortality..Rates.from.Heart.Failure)
+                  ,na.rm=TRUE)
+    besthos <- beststate$Hospital.Name[
+      match(
+        minrate
+        ,as.numeric(
+        beststate$Hospital.30.Day.Death..Mortality..Rates.from.Heart.Failure))]
+  }else{
+  if(outcome=="pneumonia" | outcome=="Pneumonia"){
+    minrate <- min(
+                   as.numeric(
+                   beststate$Hospital.30.Day.Death..Mortality..Rates.from.Pneumonia)
+                   ,na.rm=TRUE)
+    besthos <- beststate$Hospital.Name[
+      match(
+        minrate
+        ,as.numeric(
+        beststate$Hospital.30.Day.Death..Mortality..Rates.from.Pneumonia))]
+  }}}
+  
+  besthos
+  
+}
+
+best("TX","Heart Attack")
+
+best("TX","heart failure")
+
+best("MD","heart attack")
+
+best("MD","pneumonia")
+
+#best("BB", "heart attack")
+
+#best("NY","hert attack")
+
+```
+
+```{r findbesthos_run,echo=FALSE}
 
 best <- function(state,outcome){
   
@@ -181,8 +296,206 @@ best("MD","pneumonia")
 
 ```
 
+# Ranking hospitals by outcome in a state
 
-## Cleanup
+```{r rankhospital}
+
+rankhospital <- function(state,outcome,num = "best"){
+  
+    
+  #state <- "MD"
+  #outcome <- "heart attack"
+  #num <- "worst"
+  
+  data <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
+  
+  if (is.na(match(state,data$State))){
+  stop("invalid state")
+  }
+  
+    if (outcome == "heart attack" | 
+      outcome == "Heart Attack"){i <- 11} else if(
+      outcome == "heart failure" | 
+      outcome == "Heart Failure"){i <- 17} else if(
+      outcome == "pneumonia" |
+      outcome == "Pneumonia"){i <- 23}else{
+        stop("invalid outcome")
+      }
+  
+beststate <- data[which(data$State==state),]
+beststate[,i] <- as.numeric(beststate[,i])
+
+beststate <- beststate[which(!is.na(beststate[,i])),]
+
+beststate <- beststate[order(beststate[,i], beststate$Hospital.Name), ]
+
+if(num=="best" | num=="Best"){
+  num2 <- 1
+  }
+   
+if(num=="worst" | num=="Worst"){
+  num2 <- nrow(beststate)  
+}else if(is.numeric(num)) {num2 <- num}
+  else if(num<1 || num > nrow(beststate)) {
+      return(NA)
+    } else {
+    stop('invalid num')
+    }
+
+return.names <- beststate[num2, ]$Hospital.Name
+
+return.names[1]
+
+}
+
+rankhospital("TX","heart failure",4)
+
+rankhospital("MD","heart attack", "worst")
+
+rankhospital("MN","heart attack",5000)
+
+```
+
+# Ranking hospitals in all states
+
+```{r rankall}
+
+rankall <- function(outcome,num = "best"){
+  
+  #outcome <- "pneumonia"
+  #num <- "worst"
+  
+  data <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
+  
+    if (outcome == "heart attack" | 
+      outcome == "Heart Attack"){i <- 11} else if(
+      outcome == "heart failure" | 
+      outcome == "Heart Failure"){i <- 17} else if(
+      outcome == "pneumonia" |
+      outcome == "Pneumonia"){i <- 23}else{
+        stop("invalid outcome")
+      }
+  
+data[,i] <- as.numeric(data[,i])
+
+state.i <- 1
+
+states <- unique(as.character(data$State))
+ranking <- data.frame(hospital=character(0),state=character(0))
+
+for (state.i in 1:length(states)){
+#state <- "WY"
+state <- states[state.i]
+
+data.state <- data[which(data$State==state),]
+
+data.state[,i] <- as.numeric(data.state[,i])
+
+data.state <- data.state[which(!is.na(data.state[,i])),]
+
+data.state <- data.state[order(data.state[,i], data.state$Hospital.Name), ]
+
+if(num=="best" | num=="Best"){
+  num2 <- 1
+  }
+   
+if(num=="worst" | num=="Worst"){
+  num2 <- nrow(data.state)  
+}else if(is.numeric(num)) {num2 <- num}
+  else if(num<1 || num > nrow(data.state)) {
+      return(NA)
+    } else {
+    stop('invalid num')
+  }
+
+return.names <- data.state[num2, ]$Hospital.Name
+
+hospital <- return.names[1]
+
+rbinder <- cbind(state,hospital)
+
+ranking <- rbind(ranking,rbinder)
+}
+colnames(ranking) <- c("state","hospital")
+ranking[order(ranking$state),]
+}
+
+test1 <- rankall("heart attack", 20)
+head(test1,10)
+
+test2 <- rankall("pneumonia","worst")
+tail(test2,3)
+
+```
+
+# Quiz
+
+After completing the programming assignment, I had to complete a quiz using the provided code with each question.  I first had to run the provided code, and then select my output from the multiple choice options.  This quiz was used to verify whether my three functions can effectively answer the data science questions from this data set.  My final score was a 100%.
+
+1. What result is returned by the following code?
+
+```{r q1}
+best("SC", "heart attack")
+```
+
+2. What result is returned by the following code?
+
+```{r q2}
+best("NY", "pneumonia")
+```
+
+3. What result is returned by the following code?
+
+```{r q3}
+best("AK", "pneumonia")
+```
+
+4. What result is returned by the following code?
+
+```{r q4}
+rankhospital("NC", "heart attack", "worst")
+```
+
+5. What result is returned by the following code?
+
+```{r q5}
+rankhospital("WA", "heart attack", 7)
+```
+
+6. What result is returned by the following code?
+
+```{r q6}
+rankhospital("TX", "pneumonia", 10)
+```
+
+7. What result is returned by the following code?
+
+```{r q7}
+rankhospital("NY", "heart attack", 7)
+```
+
+8. What result is returned by the following code?
+
+```{r q8}
+r <- rankall("heart attack", 4)
+as.character(subset(r, state == "HI")$hospital)
+```
+
+9. What result is returned by the following code?
+
+```{r q9}
+r <- rankall("pneumonia", "worst")
+as.character(subset(r, state == "NJ")$hospital)
+```
+
+10. What result is returned by the following code?
+
+```{r q10}
+r <- rankall("heart failure", 10)
+as.character(subset(r, state == "NV")$hospital)
+```
+
+# Cleanup
 This final command removes the unzipped "specdata" directory if the deletespec variable is set to TRUE.  This reduces the overall storage burden of this project by removing the files that we no longer need access to. The zipped file remains in the working directory, so "specdata" will be recreated anyways using the command in line 93 (unzip) if it is deleted here.
 
 ```{r cleanup}

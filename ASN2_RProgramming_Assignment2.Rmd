@@ -3,13 +3,23 @@ title: 'R Programming - Assignment #2'
 author: "Myron Keith Gibert Jr"
 date: "January 29, 2020"
 output: pdf_document
-toc: true
-linkcolor: blue
+header-includes:
+- \usepackage{hyperref}
+- \hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    pdftitle={R Programming - Assignment 2},
+    pdfpagemode=FullScreen,
+    }
+toc: TRUE
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+\thispagestyle{empty}
+\clearpage
+\pagenumbering{arabic} 
+\pagebreak
 
 ```{r tinytex, include=FALSE}
 ## INSTALLING LATEX FOR RMARKDOWN
@@ -19,21 +29,42 @@ knitr::opts_chunk$set(echo = TRUE)
 #Install tinytex to let RMarkdown create a pdf document? Default: wanttinytex <- FALSE
 wanttinytex <- FALSE
 
+if(wanttinytex == TRUE){
+
 if(tinytex:::is_tinytex()==FALSE && wanttinytex == TRUE){
-if (!require("tinytex")) install.packages("tinytex")
-tinytex::install_tinytex()
+  if (!require("tinytex")) install.packages("tinytex")
+  tinytex::install_tinytex()
+  tinytex:::install_prebuilt()}
+
+library("tinytex")
+#tlmgr_install("fvextra")
+
 }
+
 ```
 
-## Correspondence 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,warning=FALSE)
+
+if (!require("tidyverse")) install.packages("tidyverse")
+library("tidyverse")
+
+if (!require("ggplot2")) install.packages("ggplot2")
+library("ggplot2")
+
+if (!require("ggthemes")) install.packages("ggthemes")
+library("ggthemes")
+```
+
+# Correspondence 
 Please address any questions to Myron Keith Gibert Jr at [mkgibertjr@msn.com](mailto:mkgibertjr@msn.com).  Code for this project is stored in a [GitHub repository](https://github.com/mkgibertjr/CouseraRProgramming_Assignments).
 
-## Introduction
+# Introduction
 For this assignment, I created two functions.  The first function will create a special list vector that can store an inverted matrix based on an input matrix.  The second function will create an inverted matrix using the special vector and store that matrix within that vector's environment.  In addition to acquiring more practice in writing functions, this assignment involved an understanding of lexical scoping. Because of this, I will take extra steps to explain what each function does, and then perform some tests at the end to confirm that the functions work as intended.
 
 The full instructions for this assignment can be found [here](https://github.com/rdpeng/ProgrammingAssignment2).
 
-## Part 1: Initializing a test matrix
+# Part 1: Initializing a test matrix
 
 To confirm that my functions work, I am going to use a test matrix and its solution from [MathisFun.com](https://www.mathsisfun.com/algebra/matrix-inverse.html). I will store the test input as x and the solution as n. After running x through my two functions, the solution output and n should be identical.
 
@@ -44,7 +75,8 @@ testmatrix <- matrix(c(4,2,7,6),2,2)
 solutionmatrix <- matrix(c(0.6,-0.2,-0.7,0.4),2,2)
 ```
 
-## Part 2a: makeCacheMatrix function
+# Part 2: Writing a function to cache a matrix
+## Part A: makeCacheMatrix function
 
 I first wrote a function named 'makeCacheMatrix' that will create a special list vector that can store the following:
 
@@ -90,12 +122,12 @@ makeCacheMatrix <- function(x = matrix()) {
 }
 
 ```
-\newpage
-## Part 2b: the makeCachematrix Environment
+
+## Part B: the makeCachematrix Environment
 
 This function utilizes lexical scoping and stores its variables in a sub environment.  The hierarchy of the environment is like so.  Variables and functions in higher environments can use all variables stored in sub environments, but not the inverse.
 
-```{r graphics, echo=FALSE}
+```{r graphics, echo=FALSE,fig.width=8,fig.height=5}
 library(knitr)
 include_graphics("scopingenvironment.png")
 ```
@@ -104,7 +136,7 @@ makeCachematrix stores the four functions and two variables from part 2a within 
 
 To complete this part of the assignment, I reviewed my course materials and sought help from [https://github.com/lgreski/datasciencectacontent/blob/master/markdown/rprog-breakingDownMakeVector.md](https://github.com/lgreski/datasciencectacontent/blob/master/markdown/rprog-breakingDownMakeVector.md).
 
-## Part 3: cacheSolve function
+# Part 3: cacheSolve function
 
 I then wrote a function named 'cacheSolve' that will use the solve() function to invert the input matrix x and the cache that solution using setsolve. The function will first check to see if a solution has already been cached using the getsolve function from earlier.  If the solution already exists (setsolve = y in the makeCachematrix environment), the function will not perform any calculations, will instead pull y from the cache, and notify the user that the cache is being used instead.  If invertedmatrix was set to NULL using makecachematrix, it will calculate the inverted matrix and set that as y.
 
@@ -140,11 +172,11 @@ cacheSolve <- function(x, ...) {
 }
 ```
 
-## Part 4: Testing the functions
+# Part 4: Testing the functions
 
 I have been taught that good coding involves testing one's code and confirming that it works as intended.  I am using the test matrix x and its solution n (from Part 1) for this test.
 
-### Test 1: Confirm that functions run without errors
+## Test 1: Confirm that functions run without errors
 
 I want to first confirm that these functions will run without errors.  I will test these functions on testmatrix and save them as new objects.
 
@@ -158,7 +190,7 @@ cs_testmatrix <- cacheSolve(mcm_testmatrix)
 
 The scripts run without errors.
 
-### Test 2: Confirm that cacheSolve will utilize the cache
+## Test 2: Confirm that cacheSolve will utilize the cache
 
 I now want to confirm that cacheSolve will not perform the same calculations on a solved and inverted matrix.  If I run cacheSolve on a matrix object that already has a solution, it should retrieve the solution from the cache instead and notify the user. I will save the output for makeCacheMatrix as cachetester for this example to prevent any conflicts with previously stored outputs of makeCacheMatrix.
 
@@ -177,7 +209,7 @@ cacheSolve(cachetester)
 
 The second instance of cacheSolve retrieves from the cache and notifies the user instead of performing the calculations again.
 
-### Test 3: Confirm that output solution matrix is correct
+## Test 3: Confirm that output solution matrix is correct
 
 My final test is to confirm that my functions produce a final output that is identical to the correct solution.  This is very important, as the entire purpose of these functions is to invert an input matrix correctly and in a memory efficient manner.  An incorrect output would defeat the purpose of writing the functions.
 
@@ -200,6 +232,6 @@ print(solutionmatrix)
 
 The matrices are identical, so the functions work as intended.
 
-## Conclusion and Additional Tests
+# Conclusion and Additional Tests
 
 The functions do work as intended.  To confirm that the functions are more memory efficient than performing the calculations manually, a much larger test matrix would be needed.  Since this cannot be confirmed visually, I have not included this test. These functions should hypothetically be more memory efficient since they will retrieve a single object rather than performing calculations on an object.
