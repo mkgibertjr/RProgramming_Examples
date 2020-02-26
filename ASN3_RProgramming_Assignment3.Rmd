@@ -98,8 +98,7 @@ if(
   !dir.exists("hospital-data.csv")|
    !dir.exists("outcome-of-care-measures.csv")|
    !dir.exists("Hospital_Revised_Flatfiles.pdf")
-)
-  {unzip("ASN3_rprog_data_hospital.zip")}
+){unzip("ASN3_rprog_data_hospital.zip")}
 
 ```
 
@@ -110,7 +109,7 @@ I first needed to read the outcome data into R via the read.csv function and loo
 ```{r read30day, results='hide'}
 outcomedata <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
 
-head(outcome)
+head(outcomedata)
 ```
 
 I then need to make a simple histogram of the 30-day death reates from heart attack.  This is column 11 in the outcome dataset.
@@ -181,6 +180,204 @@ best("MD","pneumonia")
 
 ```
 
+## Ranking hospitals by outcome in a state
+
+```{r rankhospital}
+
+rankhospital <- function(state,outcome,num = "best"){
+  
+    
+  #state <- "MD"
+  #outcome <- "heart attack"
+  #num <- "worst"
+  
+  data <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
+  
+  if (is.na(match(state,data$State))){
+  stop("invalid state")
+  }
+  
+    if (outcome == "heart attack" | 
+      outcome == "Heart Attack"){i <- 11} else if(
+      outcome == "heart failure" | 
+      outcome == "Heart Failure"){i <- 17} else if(
+      outcome == "pneumonia" |
+      outcome == "Pneumonia"){i <- 23}else{
+        stop("invalid outcome")
+      }
+  
+beststate <- data[which(data$State==state),]
+beststate[,i] <- as.numeric(beststate[,i])
+
+beststate <- beststate[which(!is.na(beststate[,i])),]
+
+beststate <- beststate[order(beststate[,i], beststate$Hospital.Name), ]
+
+if(num=="best" | num=="Best"){
+  num2 <- 1
+  }
+   
+if(num=="worst" | num=="Worst"){
+  num2 <- nrow(beststate)  
+}else if(is.numeric(num)) {num2 <- num}
+  else if(num<1 || num > nrow(beststate)) {
+      return(NA)
+    } else {
+    stop('invalid num')
+    }
+
+return.names <- beststate[num2, ]$Hospital.Name
+
+return.names[1]
+
+}
+
+rankhospital("TX","heart failure",4)
+
+rankhospital("MD","heart attack", "worst")
+
+rankhospital("MN","heart attack",5000)
+
+```
+
+## Ranking hospitals in all states
+
+```{r rankall}
+
+rankall <- function(outcome,num = "best"){
+  
+  #outcome <- "pneumonia"
+  #num <- "worst"
+  
+  data <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
+  
+    if (outcome == "heart attack" | 
+      outcome == "Heart Attack"){i <- 11} else if(
+      outcome == "heart failure" | 
+      outcome == "Heart Failure"){i <- 17} else if(
+      outcome == "pneumonia" |
+      outcome == "Pneumonia"){i <- 23}else{
+        stop("invalid outcome")
+      }
+  
+data[,i] <- as.numeric(data[,i])
+
+state.i <- 1
+
+states <- unique(as.character(data$State))
+ranking <- data.frame(hospital=character(0),state=character(0))
+
+for (state.i in 1:length(states)){
+#state <- "WY"
+state <- states[state.i]
+
+data.state <- data[which(data$State==state),]
+
+data.state[,i] <- as.numeric(data.state[,i])
+
+data.state <- data.state[which(!is.na(data.state[,i])),]
+
+data.state <- data.state[order(data.state[,i], data.state$Hospital.Name), ]
+
+if(num=="best" | num=="Best"){
+  num2 <- 1
+  }
+   
+if(num=="worst" | num=="Worst"){
+  num2 <- nrow(data.state)  
+}else if(is.numeric(num)) {num2 <- num}
+  else if(num<1 || num > nrow(data.state)) {
+      return(NA)
+    } else {
+    stop('invalid num')
+  }
+
+return.names <- data.state[num2, ]$Hospital.Name
+
+hospital <- return.names[1]
+
+rbinder <- cbind(state,hospital)
+
+ranking <- rbind(ranking,rbinder)
+}
+colnames(ranking) <- c("state","hospital")
+ranking[order(ranking$state),]
+}
+
+test1 <- rankall("heart attack", 20)
+head(test1,10)
+
+test2 <- rankall("pneumonia","worst")
+tail(test2,3)
+
+```
+
+## Quiz
+
+After completing the programming assignment, I had to complete a quiz using the provided code with each question.  I first had to run the provided code, and then select my output from the multiple choice options.  This quiz was used to verify whether my three functions can effectively answer the data science questions from this data set.  My final score was a 100%.
+
+1. What result is returned by the following code?
+
+```{r q1}
+best("SC", "heart attack")
+```
+
+2. What result is returned by the following code?
+
+```{r q2}
+best("NY", "pneumonia")
+```
+
+3. What result is returned by the following code?
+
+```{r q3}
+best("AK", "pneumonia")
+```
+
+4. What result is returned by the following code?
+
+```{r q4}
+rankhospital("NC", "heart attack", "worst")
+```
+
+5. What result is returned by the following code?
+
+```{r q5}
+rankhospital("WA", "heart attack", 7)
+```
+
+6. What result is returned by the following code?
+
+```{r q6}
+rankhospital("TX", "pneumonia", 10)
+```
+
+7. What result is returned by the following code?
+
+```{r q7}
+rankhospital("NY", "heart attack", 7)
+```
+
+8. What result is returned by the following code?
+
+```{r q8}
+r <- rankall("heart attack", 4)
+as.character(subset(r, state == "HI")$hospital)
+```
+
+9. What result is returned by the following code?
+
+```{r q9}
+r <- rankall("pneumonia", "worst")
+as.character(subset(r, state == "NJ")$hospital)
+```
+
+10. What result is returned by the following code?
+
+```{r q10}
+r <- rankall("heart failure", 10)
+as.character(subset(r, state == "NV")$hospital)
+```
 
 ## Cleanup
 This final command removes the unzipped "specdata" directory if the deletespec variable is set to TRUE.  This reduces the overall storage burden of this project by removing the files that we no longer need access to. The zipped file remains in the working directory, so "specdata" will be recreated anyways using the command in line 93 (unzip) if it is deleted here.
