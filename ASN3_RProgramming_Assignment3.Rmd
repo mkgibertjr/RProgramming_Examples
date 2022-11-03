@@ -296,7 +296,11 @@ best("MD","pneumonia")
 
 ```
 
+<<<<<<< HEAD
 # Ranking hospitals by outcome in a state
+=======
+## Ranking hospitals by outcome in a state
+>>>>>>> cacf3c5edda70402efef67a811aa0a8cd4e32a40
 
 ```{r rankhospital}
 
@@ -356,7 +360,11 @@ rankhospital("MN","heart attack",5000)
 
 ```
 
+<<<<<<< HEAD
 # Ranking hospitals in all states
+=======
+## Ranking hospitals in all states
+>>>>>>> cacf3c5edda70402efef67a811aa0a8cd4e32a40
 
 ```{r rankall}
 
@@ -428,7 +436,11 @@ tail(test2,3)
 
 ```
 
+<<<<<<< HEAD
 # Quiz
+=======
+## Quiz
+>>>>>>> cacf3c5edda70402efef67a811aa0a8cd4e32a40
 
 After completing the programming assignment, I had to complete a quiz using the provided code with each question.  I first had to run the provided code, and then select my output from the multiple choice options.  This quiz was used to verify whether my three functions can effectively answer the data science questions from this data set.  My final score was a 100%.
 
